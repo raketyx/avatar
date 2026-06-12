@@ -438,7 +438,7 @@ async function fetchBeatmaps() {
 
       card.innerHTML = `
         <img class="card-img" src="${imgUrl}" alt="${escHtml(set.title)}" loading="lazy"
-         onerror="this.src='https://assets.ppy.sh/beatmaps/${id}/covers/cover.jpg'">
+         onerror="this.onerror=null; this.src='https://assets.ppy.sh/beatmaps/${id}/covers/cover.jpg'; this.onerror=function(){this.onerror=null; this.style.visibility='hidden'; this.parentElement.style.background='linear-gradient(135deg, var(--panel), var(--border))';}">
         <div class="card-overlay">
           <div class="card-title">${escHtml(set.title)}</div>
           <div class="card-meta">
