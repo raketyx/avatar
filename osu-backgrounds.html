@@ -396,12 +396,11 @@ async function fetchBeatmaps() {
       sort:  pick(SORT_OPTIONS),
       order: pick(ORDER_OPTIONS),
       ps:    Math.floor(Math.random() * 31) + 10,
-      p:     Math.floor(Math.random() * 500) + 1,
+      p:     Math.floor(Math.random() * maxPage) + 1,
     });
 
     const statusCode = STATUS_MAP[statusVal];
     const modeCode   = MODE_MAP[modeVal];
-    params.set('s', statusCode);
     if (statusCode !== null && statusCode !== undefined) params.set('s', statusCode);
     if (modeCode   !== null && modeCode   !== undefined) params.set('m', modeCode);
 
