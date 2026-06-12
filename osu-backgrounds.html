@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>osu!browse — random beatmap backgrounds</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pink:    #FF66AA;
+    --magenta: #CC2277;
+    --dark:    #0D0A12;
+    --panel:   #16111F;
+    --border:  #2A1F3A;
+    --text:    #EDE8F5;
+    --muted:   #7A6A90;
+    --accent:  #A855F7;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Quicksand', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 28px 40px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-circle {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 3px solid var(--pink);
+    background: transparent;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .logo-circle::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--pink);
+    box-shadow: 0 0 12px var(--pink);
+  }
+
+  .logo-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .logo-text span { color: var(--pink); }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Quicksand', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color .2s;
+  }
+  select:focus { border-color: var(--pink); }
+
+  .btn {
+    background: var(--pink);
+    color: #fff;
+    border: none;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 9px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background .2s, transform .1s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--magenta); }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 9px 18px;
+  }
+  .btn-ghost:hover { border-color: var(--pink); color: var(--pink); background: transparent; }
+
+  /* ── Hero tagline ── */
+  .tagline {
+    text-align: center;
+    padding: 38px 20px 16px;
+  }
+  .tagline h1 {
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .tagline h1 em {
+    font-style: normal;
+    color: var(--pink);
+    text-shadow: 0 0 40px #ff66aa55;
+  }
+  .tagline p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  /* ── Status bar ── */
+  .status {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-family: 'Space Mono', monospace;
+    padding: 4px 20px 20px;
+    min-height: 32px;
+  }
+  .status.error { color: #ff6b6b; }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    padding: 0 28px 60px;
+  }
+
+  /* ── Card ── */
+  .card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    aspect-ratio: 16/9;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    transition: transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s;
+  }
+  .card:hover {
+    transform: translateY(-5px) scale(1.012);
+    box-shadow: 0 20px 50px #00000070, 0 0 0 1px var(--pink);
+    z-index: 2;
+  }
+  .card:hover .card-overlay { opacity: 1; }
+  .card:hover .card-img { transform: scale(1.04); }
+
+  .card-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .4s cubic-bezier(.22,1,.36,1);
+  }
+
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, #0D0A12EE 35%, #0D0A1288 65%, transparent);
+    opacity: 0;
+    transition: opacity .25s;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 16px;
+  }
+
+  .card-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 5px;
+  }
+  .card-artist {
+    font-size: 0.78rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+  .badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--pink);
+    color: #fff;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge.graveyard { background: var(--muted); }
+  .badge.ranked    { background: #3cb8a8; }
+  .badge.loved     { background: #e67ab9; }
+  .badge.qualified { background: #a855f7; }
+
+  /* open icon */
+  .card-open {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 30px; height: 30px;
+    background: #ffffffcc;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .card:hover .card-open { opacity: 1; }
+  .card-open svg { width: 14px; color: #111; }
+
+  /* skeleton */
+  .skeleton {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    position: relative;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, #ffffff08 50%, transparent 100%);
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--pink); text-decoration: none; }
+
+  /* ── Floating load more ── */
+  .load-bar {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    background: #16111Fdd;
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 8px 16px;
+    box-shadow: 0 8px 32px #00000060;
+    z-index: 10;
+    transition: opacity .3s;
+  }
+  .load-bar.hidden { opacity: 0; pointer-events: none; }
+
+  @media (max-width: 600px) {
+    header { padding: 20px 16px 0; }
+    .grid  { padding: 0 12px 80px; gap: 10px; }
+    .tagline { padding: 24px 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-circle"></div>
+    <div class="logo-text">osu<span>!browse</span></div>
+  </div>
+  <div class="controls">
+  <a href="index.html" class="btn btn-ghost" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back to Archive
+  </a>
+    <select id="status-filter">
+      <option value="">any status</option>
+      <option value="ranked">ranked</option>
+      <option value="loved">loved</option>
+      <option value="qualified">qualified</option>
+      <option value="graveyard">graveyard</option>
+    </select>
+    <select id="mode-filter">
+      <option value="">any mode</option>
+      <option value="osu">osu!</option>
+      <option value="taiko">taiko</option>
+      <option value="fruits">catch</option>
+      <option value="mania">mania</option>
+    </select>
+    <button class="btn" id="refresh-btn" onclick="loadBeatmaps()">shuffle</button>
+  </div>
+</header>
+
+<div class="tagline">
+  <h1>discover maps through their <em>art</em></h1>
+  <p>click any background to open that beatmap on osu!</p>
+</div>
+
+<div class="status" id="status">loading beatmaps…</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="load-bar" id="load-bar">
+  <button class="btn btn-ghost" onclick="loadBeatmaps()">↺ new batch</button>
+  <button class="btn" onclick="loadMore()">load more</button>
+</div>
+
+<footer>
+  backgrounds from <a href="https://osu.ppy.sh" target="_blank">osu.ppy.sh</a> · not affiliated with ppy Pty Ltd
+</footer>
+
+<script>
+  const GRID        = document.getElementById('grid');
+  const STATUS      = document.getElementById('status');
+  const LOAD_BAR    = document.getElementById('load-bar');
+  const REFRESH_BTN = document.getElementById('refresh-btn');
+
+  let isLoading = false;
+
+  // Nerinyan: free, no-auth osu! beatmap API mirror
+  // https://nerinyan.stoplight.io/docs/nerinyan-api
+  const NERINYAN = 'https://api.nerinyan.moe/search';
+
+  const SORT_OPTIONS  = ['play_count', 'favourite_count', 'ranked_date', 'last_updated', 'difficulty'];
+  const ORDER_OPTIONS = ['asc', 'desc'];
+
+  // Nerinyan status codes
+  const STATUS_MAP = { ranked: 1, loved: 4, qualified: 3, graveyard: -2, '': null };
+  const MODE_MAP   = { osu: 0, taiko: 1, fruits: 2, mania: 3, '': null };
+  const BADGE_MAP  = { '1': 'ranked', '4': 'loved', '3': 'qualified', '-2': 'graveyard', '-1': 'graveyard' };
+  const LABEL_MAP  = { '1': 'ranked', '4': 'loved', '3': 'qualified', '-2': 'graveyard', '-1': 'WIP', '0': 'pending' };
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function escHtml(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function setStatus(msg, isError = false) {
+    STATUS.textContent = msg;
+    STATUS.className = 'status' + (isError ? ' error' : '');
+  }
+
+  async function fetchBeatmaps() {
+    const statusVal = document.getElementById('status-filter').value;
+    const modeVal   = document.getElementById('mode-filter').value;
+
+    const params = new URLSearchParams({
+      sort:  pick(SORT_OPTIONS),
+      order: pick(ORDER_OPTIONS),
+      ps:    20,
+      p:     Math.floor(Math.random() * 60) + 1,
+    });
+
+    const statusCode = STATUS_MAP[statusVal];
+    const modeCode   = MODE_MAP[modeVal];
+    if (statusCode !== null && statusCode !== undefined) params.set('s', statusCode);
+    if (modeCode   !== null && modeCode   !== undefined) params.set('m', modeCode);
+
+    const res = await fetch(`${NERINYAN}?${params}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  }
+
+  function renderCards(sets, append = false) {
+    if (!append) GRID.innerHTML = '';
+
+    // Nerinyan serves cover images at: https://assets.ppy.sh/beatmaps/{id}/covers/cover.jpg
+    // but also returns covers object — use that with fallback
+    const valid = sets.filter(s => s.id);
+
+    valid.forEach(set => {
+      const id     = set.id;
+      const imgUrl = (set.covers && (set.covers['cover@2x'] || set.covers.cover))
+                     || `https://assets.ppy.sh/beatmaps/${id}/covers/cover@2x.jpg`;
+      const link   = `https://osu.ppy.sh/beatmapsets/${id}`;
+      const status = set.ranked_status ?? set.status ?? null;
+      const label  = LABEL_MAP[String(status)] || '';
+      const badge  = BADGE_MAP[String(status)] || '';
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('role', 'link');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', `${set.title} by ${set.artist}`);
+
+      card.innerHTML = `
+        <img class="card-img" src="${imgUrl}" alt="${escHtml(set.title)}" loading="lazy"
+             onerror="this.src='https://assets.ppy.sh/beatmaps/${id}/covers/cover.jpg'">
+        <div class="card-overlay">
+          <div class="card-title">${escHtml(set.title)}</div>
+          <div class="card-meta">
+            <div class="card-artist">${escHtml(set.artist)}</div>
+            ${label ? `<span class="badge ${badge}">${label}</span>` : ''}
+          </div>
+        </div>
+        <div class="card-open">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </div>
+      `;
+
+      const open = () => window.open(link, '_blank');
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', e => e.key === 'Enter' && open());
+      GRID.appendChild(card);
+    });
+
+    return valid.length;
+  }
+
+  function showSkeletons(n = 12) {
+    GRID.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const sk = document.createElement('div');
+      sk.className = 'skeleton';
+      GRID.appendChild(sk);
+    }
+  }
+
+  async function loadBeatmaps() {
+    if (isLoading) return;
+    isLoading = true;
+    REFRESH_BTN.disabled = true;
+    LOAD_BAR.classList.add('hidden');
+    showSkeletons(12);
+    setStatus('loading beatmaps…');
+
+    try {
+      const sets  = await fetchBeatmaps();
+      const count = renderCards(sets);
+      setStatus(count > 0 ? `showing ${count} beatmaps` : 'no results — try different filters');
+      LOAD_BAR.classList.toggle('hidden', count === 0);
+    } catch (e) {
+      setStatus('could not reach nerinyan — check your connection', true);
+      GRID.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 20px">
+        <div style="font-size:2rem;margin-bottom:12px">●</div>
+        <div>couldn't load beatmaps right now</div>
+        <div style="font-size:0.8rem;margin-top:6px">nerinyan.moe may be unreachable</div>
+      </div>`;
+      LOAD_BAR.classList.add('hidden');
+    } finally {
+      isLoading = false;
+      REFRESH_BTN.disabled = false;
+    }
+  }
+
+  async function loadMore() {
+    if (isLoading) return;
+    isLoading = true;
+    setStatus('loading more…');
+    try {
+      const sets  = await fetchBeatmaps();
+      renderCards(sets, true);
+      const total = GRID.querySelectorAll('.card').length;
+      setStatus(`showing ${total} beatmaps`);
+    } catch(e) {
+      setStatus('failed to load more', true);
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  document.getElementById('status-filter').addEventListener('change', loadBeatmaps);
+  document.getElementById('mode-filter').addEventListener('change',   loadBeatmaps);
+
+  loadBeatmaps();
+</script>
+</body>
+</html>

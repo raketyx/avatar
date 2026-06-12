@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>osu! Avatar Archive</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=DM+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink:       #ff4d8f;
+  --pink-soft:  #ff80b3;
+  --pink-glow:  rgba(255,77,143,0.22);
+  --pink-dim:   rgba(255,77,143,0.08);
+  --bg:         #08080d;
+  --bg2:        #0d0d15;
+  --surface:    #13131e;
+  --surface2:   #1a1a28;
+  --border:     rgba(255,255,255,0.07);
+  --border-hi:  rgba(255,77,143,0.4);
+  --text:       #f0f0f8;
+  --muted:      #5a5a72;
+  --muted2:     #3a3a52;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ── BACKGROUND ── */
+.bg-fx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.12;
+}
+.bg-orb.a { width: 600px; height: 600px; background: #ff4d8f; top: -200px; left: -100px; animation: drift 18s ease-in-out infinite alternate; }
+.bg-orb.b { width: 500px; height: 500px; background: #b04dff; bottom: -150px; right: -100px; animation: drift 22s ease-in-out infinite alternate-reverse; }
+.bg-orb.c { width: 300px; height: 300px; background: #4d8fff; top: 40%; left: 50%; animation: drift 15s ease-in-out infinite alternate; }
+
+@keyframes drift {
+  0%   { transform: translate(0,0) scale(1); }
+  100% { transform: translate(40px, 30px) scale(1.1); }
+}
+
+/* grid lines */
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* noise */
+.bg-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  background: rgba(8,8,13,0.75);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-bottom: 1px solid var(--border);
+}
+
+/* thin accent line at very top */
+header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pink), #b04dff, var(--pink), transparent);
+  opacity: 0.7;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--pink), #b04dff);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 20px var(--pink-glow);
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.logo-text span { color: var(--pink); }
+.logo-text small {
+  display: block;
+  font-size: 0.58rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 400;
+  margin-top: 1px;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.tab-btn {
+  position: relative;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  padding: 8px 24px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.tab-btn.active {
+  color: #fff;
+}
+
+/* sliding pill background */
+.tab-slider {
+  position: absolute;
+  top: 4px; bottom: 4px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--pink), #c03ab0);
+  box-shadow: 0 4px 20px var(--pink-glow);
+  transition: left 0.25s cubic-bezier(0.34,1.3,0.64,1), width 0.25s cubic-bezier(0.34,1.3,0.64,1);
+  pointer-events: none;
+}
+
+.tab-btn:not(.active):hover { color: var(--text); }
+
+.fav-count {
+  background: rgba(255,255,255,0.2);
+  color: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 20px;
+  min-width: 18px;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+}
+.tab-btn:not(.active) .fav-count {
+  background: var(--muted2);
+  color: var(--muted);
+}
+
+/* ── CONTROLS ── */
+.controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.btn {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  padding: 10px 24px;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.2s, opacity 0.2s;
+  letter-spacing: -0.01em;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.15s;
+}
+.btn:hover::before { background: rgba(255,255,255,0.08); }
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--pink) 0%, #c03ab0 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--pink-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.btn-primary:hover { box-shadow: 0 6px 28px rgba(255,77,143,0.4), inset 0 1px 0 rgba(255,255,255,0.15); }
+
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:not(:disabled):hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+.btn-danger {
+  background: rgba(255,77,100,0.1);
+  color: #ff6680;
+  border: 1px solid rgba(255,77,100,0.2);
+}
+.btn-danger:hover { background: rgba(255,77,100,0.18); }
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ── HERO BAR ── */
+.controls-wrap {
+  position: relative;
+  z-index: 1;
+  padding: 20px 24px 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* ── PAGE / GRID ── */
+.page { display: none; padding: 24px; max-width: 1280px; margin: 0 auto; position: relative; z-index: 1; }
+.page.active { display: block; }
+
+#grid, #fav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  transition: transform 0.22s cubic-bezier(0.34,1.4,0.64,1), border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+  animation: cardIn 0.5s cubic-bezier(0.34,1.2,0.64,1) both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.93); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: var(--border-hi);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--border-hi), 0 0 30px var(--pink-glow);
+}
+
+.avatar-wrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: visible;
+}
+
+.avatar-link {
+  display: block;
+  overflow: hidden;
+  border-radius: 12px;
+  position: relative;
+}
+
+/* shimmer while loading */
+.avatar-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 12px;
+  transition: opacity 0.3s;
+}
+.avatar-link.loaded::after { opacity: 0; pointer-events: none; }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+img.avatar {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 12px;
+  display: block;
+  transition: transform 0.3s cubic-bezier(0.34,1.3,0.64,1);
+  object-fit: cover;
+  position: relative;
+  z-index: 1;
+}
+.avatar-link:hover img.avatar { transform: scale(1.07); }
+
+/* overlay gradient on hover */
+.avatar-link .av-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(to top, rgba(8,8,13,0.7) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  padding: 8px;
+}
+.card:hover .av-overlay { opacity: 1; }
+.av-overlay-text {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.05em;
+}
+
+/* ── HEART BUTTON ── */
+.heart-btn {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(8,8,13,0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+  z-index: 5;
+  line-height: 1;
+  color: var(--muted);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.heart-btn:hover {
+  transform: scale(1.2);
+  background: rgba(20,8,15,0.85);
+  box-shadow: 0 4px 12px rgba(255,77,143,0.3);
+}
+.heart-btn.faved {
+  background: rgba(255,77,143,0.2);
+  color: var(--pink);
+  border-color: rgba(255,77,143,0.3);
+  box-shadow: 0 0 12px var(--pink-glow);
+}
+
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.55); }
+  65%  { transform: scale(0.88); }
+  100% { transform: scale(1); }
+}
+.heart-btn.pop { animation: heartPop 0.38s cubic-bezier(0.34,1.56,0.64,1); }
+
+/* ── REMOVE BUTTON ── */
+.remove-btn {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,77,100,0.2);
+  background: rgba(8,8,13,0.7);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: transform 0.15s, background 0.15s;
+  z-index: 5;
+  padding: 0;
+  color: rgba(255,102,128,0.6);
+}
+.remove-btn:hover {
+  transform: scale(1.2);
+  background: rgba(40,10,20,0.9);
+  color: #ff6680;
+  border-color: rgba(255,77,100,0.5);
+}
+
+/* ── USER LINK ── */
+.user-link {
+  display: block;
+  margin-top: 9px;
+  padding: 0 2px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: -0.02em;
+}
+.user-link:hover { color: var(--pink-soft); }
+.user-link.loading { color: var(--muted2); font-style: italic; }
+
+/* user id decoration */
+.user-id-badge {
+  display: block;
+  font-size: 9.5px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted2);
+  padding: 0 2px;
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px;
+  gap: 12px;
+}
+.empty-state .icon {
+  font-size: 56px;
+  opacity: 0.15;
+  filter: grayscale(1);
+}
+.empty-state h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  opacity: 0.35;
+  letter-spacing: -0.02em;
+}
+.empty-state p {
+  font-size: 13px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding: 0 2px;
+}
+.section-title {
+  font-size: 0.72rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.section-title span { color: var(--pink); }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(90px);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 22px 10px 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 9999;
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+}
+#toast::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 6px var(--pink);
+  flex-shrink: 0;
+}
+#toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--muted2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  header { padding: 14px 16px; gap: 10px; }
+  .page { padding: 16px; }
+  #grid, #fav-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .btn { padding: 9px 16px; font-size: 13px; }
+  .tab-btn { padding: 7px 16px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Background FX -->
+<div class="bg-fx" aria-hidden="true">
+  <div class="bg-orb a"></div>
+  <div class="bg-orb b"></div>
+  <div class="bg-orb c"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+</div>
+
+<!-- Header -->
+<header>
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:900px;gap:16px;flex-wrap:wrap;">
+    <a href="#" class="logo" style="text-decoration:none;color:inherit;">
+      <div class="logo-icon">🎵</div>
+      <div class="logo-text">
+        osu!<span>avatars</span>
+        <small>archive · explorer</small>
+      </div>
+    </a>
+
+    <div class="tabs" id="tabs">
+      <div class="tab-slider" id="tab-slider"></div>
+      <button class="tab-btn active" id="tab-explore" onclick="switchTab('explore')">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Explore
+      </button>
+      <button class="tab-btn" id="tab-favs" onclick="switchTab('favs')">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M8 13.5s-6-4-6-7.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 14 6c0 3.5-6 7.5-6 7.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        Favourites
+        <span class="fav-count" id="fav-count">0</span>
+      </button>
+    <a href="osu-backgrounds.html" class="tab-btn" style="text-decoration: none;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    Backgrounds
+  </a>
+  </div>
+
+  <div class="controls" id="explore-controls">
+    <button class="btn btn-ghost" id="back-btn" onclick="goBack()" disabled>
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back
+    </button>
+    <button class="btn btn-primary" onclick="generateNewBatch()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M2 8a6 6 0 0 1 10.47-4H10m4 0v4M14 8a6 6 0 0 1-10.47 4H6m-4 0V8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      18 Random Avatars
+    </button>
+  </div>
+
+  <div class="controls" id="favs-controls" style="display:none;">
+    <button class="btn btn-danger" onclick="clearAllFavs()" id="clear-btn" disabled>
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M3 4h10M6 4V2h4v2M5 4l.5 9M11 4l-.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Clear All
+    </button>
+  </div>
+</header>
+
+<div class="divider"></div>
+
+<!-- Explore Page -->
+<div class="page active" id="page-explore">
+  <div class="section-header">
+    <span class="section-title">Showing <span id="batch-count">18</span> avatars</span>
+    <span class="section-title" id="batch-seed" style="font-style:italic;"></span>
+  </div>
+  <div id="grid"></div>
+</div>
+
+<!-- Favs Page -->
+<div class="page" id="page-favs">
+  <div class="section-header">
+    <span class="section-title">Your collection — <span id="fav-total">0</span> saved</span>
+  </div>
+  <div id="fav-grid"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const MAX_USER_ID = 40000000;
+  let history = [];
+  let currentBatch = [];
+  let favourites = {};
+  let currentTab = 'explore';
+
+  // ── STORAGE ──
+  function saveFavs() {
+    try { localStorage.setItem('osu_favs_v2', JSON.stringify(favourites)); } catch(e) {}
+  }
+  function loadFavs() {
+    try {
+      const raw = localStorage.getItem('osu_favs_v2') || localStorage.getItem('osu_favs');
+      if (raw) favourites = JSON.parse(raw);
+    } catch(e) { favourites = {}; }
+  }
+
+  // ── TOAST ──
+  let toastTimeout;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.childNodes[t.childNodes.length - 1].textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  // ── TAB SLIDER ──
+  function updateSlider() {
+    const active = document.querySelector('.tab-btn.active');
+    const slider = document.getElementById('tab-slider');
+    const tabs = document.getElementById('tabs');
+    if (!active || !slider || !tabs) return;
+    const tr = tabs.getBoundingClientRect();
+    const ar = active.getBoundingClientRect();
+    slider.style.left = (ar.left - tr.left) + 'px';
+    slider.style.width = ar.width + 'px';
+  }
+
+  // ── TABS ──
+  function switchTab(tab) {
+    currentTab = tab;
+    ['explore','favs'].forEach(t => {
+      document.getElementById('page-' + t).classList.toggle('active', t === tab);
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    });
+    document.getElementById('explore-controls').style.display = tab === 'explore' ? 'flex' : 'none';
+    document.getElementById('favs-controls').style.display = tab === 'favs' ? 'flex' : 'none';
+    updateSlider();
+    if (tab === 'favs') renderFavGrid();
+  }
+
+  // ── FAV COUNT ──
+  function updateFavCount() {
+    const count = Object.keys(favourites).length;
+    document.getElementById('fav-count').textContent = count;
+    document.getElementById('fav-total').textContent = count;
+    document.getElementById('clear-btn').disabled = count === 0;
+  }
+
+  // ── TOGGLE FAV ──
+  function toggleFav(id, username, avatarSrc) {
+    const btn = document.querySelector(`.heart-btn[data-id="${id}"]`);
+    if (favourites[id]) {
+      delete favourites[id];
+      if (btn) { btn.innerHTML = heartSVG(false); btn.classList.remove('faved'); }
+      showToast('Removed from favourites');
+    } else {
+      favourites[id] = { id, username, avatarSrc };
+      if (btn) {
+        btn.innerHTML = heartSVG(true);
+        btn.classList.add('faved');
+        btn.classList.remove('pop');
+        void btn.offsetWidth;
+        btn.classList.add('pop');
+      }
+      showToast('Added to favourites');
+    }
+    saveFavs();
+    updateFavCount();
+    if (currentTab === 'favs') renderFavGrid();
+  }
+
+  function removeFav(id) {
+    delete favourites[id];
+    saveFavs();
+    updateFavCount();
+    renderFavGrid();
+    const btn = document.querySelector(`.heart-btn[data-id="${id}"]`);
+    if (btn) { btn.innerHTML = heartSVG(false); btn.classList.remove('faved'); }
+    showToast('Removed from favourites');
+  }
+
+  function clearAllFavs() {
+    if (!confirm('Clear all favourites?')) return;
+    favourites = {};
+    saveFavs();
+    updateFavCount();
+    renderFavGrid();
+    document.querySelectorAll('.heart-btn.faved').forEach(btn => {
+      btn.innerHTML = heartSVG(false);
+      btn.classList.remove('faved');
+    });
+    showToast('Cleared all favourites');
+  }
+
+  // ── SVG HELPERS ──
+  function heartSVG(filled) {
+    return filled
+      ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 13.5s-6-4-6-7.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 14 6c0 3.5-6 7.5-6 7.5Z"/></svg>`
+      : `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 13.5s-6-4-6-7.5a3.5 3.5 0 0 1 6-2.45A3.5 3.5 0 0 1 14 6c0 3.5-6 7.5-6 7.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+  }
+
+  // ── BUILD CARD ──
+  function buildCard(id, forFavs = false) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.animationDelay = `${Math.min(Array.from(card.parentElement?.children || []).length, 17) * 30}ms`;
+
+    const isFaved = !!favourites[id];
+    const username = favourites[id]?.username || '';
+    const avatarSrc = `https://a.ppy.sh/${id}`;
+
+    if (forFavs) {
+      card.innerHTML = `
+        <div class="avatar-wrap">
+          <a class="avatar-link" href="https://osu.ppy.sh/users/${id}" target="_blank" rel="noopener">
+            <img class="avatar" src="${avatarSrc}" loading="lazy"
+              onload="this.closest('.avatar-link').classList.add('loaded')"
+              onerror="this.src='https://osu.ppy.sh/images/layout/avatar-guest.png';this.closest('.avatar-link').classList.add('loaded')">
+            <div class="av-overlay"><span class="av-overlay-text">view profile ↗</span></div>
+          </a>
+          <button class="remove-btn" data-id="${id}" onclick="removeFav(${id})" title="Remove">✕</button>
+        </div>
+        <a class="user-link" href="https://osu.ppy.sh/users/${id}" target="_blank" rel="noopener">${username || `User #${id}`}</a>
+        <span class="user-id-badge">#${id}</span>`;
+    } else {
+      card.innerHTML = `
+        <div class="avatar-wrap">
+          <a class="avatar-link" href="https://osu.ppy.sh/users/${id}" target="_blank" rel="noopener">
+            <img class="avatar" id="img-${id}" src="${avatarSrc}" loading="lazy"
+              onload="this.closest('.avatar-link').classList.add('loaded')"
+              onerror="this.src='https://osu.ppy.sh/images/layout/avatar-guest.png';this.closest('.avatar-link').classList.add('loaded')">
+            <div class="av-overlay"><span class="av-overlay-text">view profile ↗</span></div>
+          </a>
+          <button class="heart-btn ${isFaved ? 'faved' : ''}" data-id="${id}"
+            onclick="toggleFav(${id}, document.getElementById('username-${id}')?.textContent || 'User #${id}', document.getElementById('img-${id}')?.src)"
+            title="${isFaved ? 'Remove from favourites' : 'Add to favourites'}">
+            ${heartSVG(isFaved)}
+          </button>
+        </div>
+        <a class="user-link loading" id="username-${id}" href="https://osu.ppy.sh/users/${id}" target="_blank" rel="noopener">loading…</a>
+        <span class="user-id-badge">#${id}</span>`;
+    }
+
+    return card;
+  }
+
+  // ── RENDER EXPLORE ──
+  function renderBatch(batch) {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    batch.forEach((id, i) => {
+      const card = buildCard(id, false);
+      card.style.animationDelay = `${Math.min(i, 17) * 28}ms`;
+      grid.appendChild(card);
+      fetchUsername(id);
+    });
+    document.getElementById('back-btn').disabled = history.length === 0;
+    document.getElementById('batch-count').textContent = batch.length;
+  }
+
+  // ── RENDER FAVS ──
+  function renderFavGrid() {
+    const grid = document.getElementById('fav-grid');
+    grid.innerHTML = '';
+    const ids = Object.keys(favourites);
+    document.getElementById('fav-total').textContent = ids.length;
+
+    if (ids.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">♡</div>
+          <h2>No favourites yet</h2>
+          <p>tap ♡ on any avatar to save it here</p>
+        </div>`;
+      return;
+    }
+
+    [...ids].reverse().forEach((id, i) => {
+      const card = buildCard(Number(id), true);
+      card.style.animationDelay = `${Math.min(i, 17) * 28}ms`;
+      grid.appendChild(card);
+    });
+  }
+
+  // ── FETCH USERNAME ──
+  async function fetchUsername(id) {
+    const el = document.getElementById(`username-${id}`);
+    if (!el) return;
+    try {
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`https://osu.ppy.sh/users/${id}`)}`;
+      const r = await fetch(proxyUrl);
+      if (!r.ok) throw new Error();
+      const html = await r.text();
+      const match = html.match(/<title>(.*?)'s\s+profile/i);
+      const uname = (match && match[1]) ? match[1].trim() : `User #${id}`;
+      el.textContent = uname;
+      el.classList.remove('loading');
+      if (favourites[id]) { favourites[id].username = uname; saveFavs(); }
+    } catch {
+      if (el) { el.textContent = `User #${id}`; el.classList.remove('loading'); }
+    }
+  }
+
+  // ── GENERATE ──
+  function generateNewBatch() {
+    if (currentBatch.length > 0) history.push([...currentBatch]);
+    const nextBatch = Array.from({ length: 18 }, () => Math.floor(Math.random() * MAX_USER_ID) + 1);
+    currentBatch = nextBatch;
+    renderBatch(currentBatch);
+    document.getElementById('batch-seed').textContent = `seed ${Date.now().toString(36)}`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function goBack() {
+    if (history.length > 0) {
+      currentBatch = history.pop();
+      renderBatch(currentBatch);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  // ── INIT ──
+  loadFavs();
+  updateFavCount();
+  generateNewBatch();
+
+  // fix toast text node
+  const toast = document.getElementById('toast');
+  toast.appendChild(document.createTextNode(''));
+
+  // position slider after fonts load
+  requestAnimationFrame(() => { requestAnimationFrame(updateSlider); });
+  window.addEventListener('resize', updateSlider);
+
+  // ── KEYBOARD SHORTCUTS ──
+  window.addEventListener('keydown', e => {
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+    if (e.key === 'r' || e.key === 'R') {
+      if (currentTab === 'explore') generateNewBatch();
+    }
+  });
+</script>
+</body>
+</html>
