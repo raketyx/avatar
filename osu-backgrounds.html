@@ -368,7 +368,7 @@
   // https://nerinyan.stoplight.io/docs/nerinyan-api
   const NERINYAN = 'https://api.nerinyan.moe/search';
 
-  const SORT_OPTIONS  = ['play_count', 'favourite_count', 'ranked_date', 'last_updated', 'difficulty'];
+  const SORT_OPTIONS  = ['play_count', 'favourite_count', 'ranked_date', 'last_updated', 'difficulty', 'title', 'artist', 'bpm', 'score', 'rating', 'id'];
   const ORDER_OPTIONS = ['asc', 'desc'];
 
   // Nerinyan status codes
@@ -388,15 +388,15 @@
     STATUS.className = 'status' + (isError ? ' error' : '');
   }
 
-  async function fetchBeatmaps() {
+async function fetchBeatmaps() {
     const statusVal = document.getElementById('status-filter').value;
     const modeVal   = document.getElementById('mode-filter').value;
 
     const params = new URLSearchParams({
       sort:  pick(SORT_OPTIONS),
       order: pick(ORDER_OPTIONS),
-      ps:    20,
-      p:     Math.floor(Math.random() * 60) + 1,
+      ps:    Math.floor(Math.random() * 31) + 10,
+      p:     Math.floor(Math.random() * 500) + 1,
     });
 
     const statusCode = STATUS_MAP[statusVal];
@@ -407,7 +407,8 @@
     const res = await fetch(`${NERINYAN}?${params}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    const sets = Array.isArray(data) ? data : [];
+    return sets.sort(() => Math.random() - 0.5);
   }
 
   function renderCards(sets, append = false) {
