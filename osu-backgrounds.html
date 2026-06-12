@@ -372,7 +372,7 @@
   const ORDER_OPTIONS = ['asc', 'desc'];
 
   // Nerinyan status codes
-  const STATUS_MAP = { ranked: 1, loved: 4, qualified: 3, graveyard: -2, '': 'Any' };
+  const STATUS_MAP = { ranked: 1, loved: 4, qualified: 3, graveyard: -2, '': null };
   const MODE_MAP   = { osu: 0, taiko: 1, fruits: 2, mania: 3, '': null };
   const BADGE_MAP  = { '1': 'ranked', '4': 'loved', '3': 'qualified', '-2': 'graveyard', '-1': 'graveyard' };
   const LABEL_MAP  = { '1': 'ranked', '4': 'loved', '3': 'qualified', '-2': 'graveyard', '-1': 'WIP', '0': 'pending' };
@@ -391,6 +391,8 @@
 async function fetchBeatmaps() {
     const statusVal = document.getElementById('status-filter').value;
     const modeVal   = document.getElementById('mode-filter').value;
+
+    const maxPage = 20;
 
     const params = new URLSearchParams({
       sort:  pick(SORT_OPTIONS),
